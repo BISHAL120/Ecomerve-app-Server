@@ -10,7 +10,11 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.dsu8oow.mongodb.net/?retryWrites=true&w=majority`;
+/* ecomerceapp */
+
+/* gD18BuRY4RSm5nD1 */
+
+const uri = `mongodb+srv://ecomerceapp:tj6pHJvLjs7MmX3D@cluster0.dsu8oow.mongodb.net/?retryWrites=true&w=majority`;
 
 // Create a MongoClient with a MongoClientOptions object to set the Stable API version
 const client = new MongoClient(uri, {
@@ -28,7 +32,7 @@ async function run() {
       .db("ecomerce-Database")
       .collection("tshart");
 
-      // Get
+    // Get
     app.get("/tsharts", async (req, res) => {
       const query = {};
       const cursor = tshartCollection.find(query);
@@ -36,32 +40,46 @@ async function run() {
       res.send(tsharts);
     });
 
-    app.get("/tsharts/:id", async(req, res) => {
+    app.get("/tsharts/:id", async (req, res) => {
       const id = req.params.id;
-      const query = {_id: new ObjectId(id)};
+      const query = { _id: new ObjectId(id) };
       const tshart = await tshartCollection.findOne(query);
       res.send(tshart);
     });
-    
+
     // Post
 
-    app.post("/tsharts", async(req, res) => {
+    /*  app.post("/tsharts", async (req, res) => {
       const newProduct = req.body;
       const result = await tshartCollection.insertOne(newProduct);
       res.send(result);
-    })
-    
+    }); */
+
+    app.post("/tsharts", async (req, res) => {
+      const newProduct = req.body;
+      newProduct.createdAt = new Date();
+
+      // Step 1: Retrieve current documents in the collection
+      const existingProducts = await tshartCollection.find().toArray();
+
+      // Step 2: Insert the new document at the beginning
+      existingProducts.unshift(newProduct);
+
+      // Step 3: Update the collection with the new order
+      await tshartCollection.deleteMany({}); // Remove all existing documents
+      await tshartCollection.insertMany(existingProducts); // Insert the updated documents
+
+      res.send({ success: true });
+    });
+
     // Delete
-    app.delete("/tsharts/:id", async(req, res) => {
+    app.delete("/tsharts/:id", async (req, res) => {
       const id = req.params.id;
-      const query = {_id: new ObjectId(id)};
+      const query = { _id: new ObjectId(id) };
       const tshart = await tshartCollection.deleteOne(query);
       res.send(tshart);
-    })
-
-
+    });
   } finally {
-
   }
 }
 run().catch(console.dir);
